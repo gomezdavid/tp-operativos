@@ -1,4 +1,4 @@
-#include "marcos_libres.h"
+#include <../include/marcos_libres.h>
 #include <commons/bitarray.h>
 #include <stdlib.h>
 #include <string.h>

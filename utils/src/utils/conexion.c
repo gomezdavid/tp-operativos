@@ -2,8 +2,8 @@
 extern t_log *logger;
 
 
-uint32_t crear_socket_cliente(char *ip, char* port) {
-    uint32_t err;
+int32_t crear_socket_cliente(char *ip, char* port) {
+    int32_t err;
     struct addrinfo hints, *server_info;
 
     memset(&hints, 0, sizeof(hints));
@@ -30,12 +30,12 @@ uint32_t crear_socket_cliente(char *ip, char* port) {
         log_error(logger, "Error al crear la conexion: %s", strerror(errno));
         abort();
     } 
-    log_info(logger, "Conexion creada con exito.");
+    log_debug(logger, "Conexion creada con exito.");
     freeaddrinfo(server_info);
 	return fd_conexion;
 }
 
-uint32_t iniciar_servidor(char* puerto) {
+int32_t iniciar_servidor(char* puerto) {
     int socket_servidor;
     int err;
     struct addrinfo hints, *servinfo;
@@ -79,23 +79,23 @@ uint32_t iniciar_servidor(char* puerto) {
     return socket_servidor;
 }
 
-uint32_t esperar_cliente(uint32_t socket_servidor)
+int32_t esperar_cliente(int32_t socket_servidor)
 {
         // Aceptamos un nuevo cliente
-        uint32_t socket_cliente;
+        int32_t socket_cliente;
         socket_cliente = accept(socket_servidor, NULL, NULL);
         if(socket_cliente == -1) {
             log_warning(logger, "Error al aceptar a un cliente: %s", strerror(errno));
         }
-        log_info(logger, "Se conecto un cliente.");
+        log_debug(logger, "Se conecto un cliente.");
 
         return socket_cliente;
 }
 
-uint8_t recibir_operacion(uint32_t socket_cliente)
+uint8_t recibir_operacion(int32_t socket_cliente)
 {
     uint8_t cod_op;
-    uint32_t err;
+    int32_t err;
     err = recv(socket_cliente, &cod_op, sizeof(uint8_t), 0);
     if (err == -1) {
         log_error(logger, "Error al recibir codigo de operación: %s", strerror(errno));
@@ -104,7 +104,7 @@ uint8_t recibir_operacion(uint32_t socket_cliente)
     return cod_op;
 }
 
-void liberar_conexion(uint32_t socket_cliente)
+void liberar_conexion(int32_t socket_cliente)
 {
 	close(socket_cliente);
 }

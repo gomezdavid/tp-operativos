@@ -18,69 +18,73 @@ typedef enum {
 } t_instruccion;
 
 typedef struct {
-    uint32_t pid;
-    uint32_t tiempo_bloqueo;
+    int32_t pid;
+    int32_t tiempo_bloqueo;
 } kernel_to_io;
 
 typedef struct {
     void* datos;
-    uint32_t datos_length;
+    int32_t datos_length;
 } cpu_to_kernel;
 
 typedef struct {
     t_instruccion syscall;
     char* parametros;
-    uint32_t parametros_length;
-    uint32_t pid;
-    uint32_t pc;
+    int32_t parametros_length;
+    int32_t pid;
+    int32_t pc;
 } t_syscall;
 
 typedef struct {
     char* archivo;
-    uint32_t archivo_lenght;
-    uint32_t tamanio_proceso;
+    int32_t archivo_lenght;
+    int32_t tamanio_proceso;
 } init_proc_parameters;
 
 typedef struct {
-    uint32_t tiempo_bloqueo;
+    int32_t tiempo_bloqueo;
     char* identificador;
-    uint32_t identificador_length;
+    int32_t identificador_length;
 } io_parameters;
 
 //hay otra estructura para cpu que no se cual es la correcta, si la de arriba o esta de abajo:
 
 typedef struct{
-    uint32_t pid;
-    uint32_t pc;
+    int32_t pid;
+    int32_t pc;
 } kernel_to_cpu;
 
 typedef struct {
     char* archivo;
-    uint32_t archivo_length;
-    uint32_t tamanio;
-    uint32_t pid;
+    int32_t archivo_length;
+    int32_t tamanio;
+    int32_t pid;
 } kernel_to_memoria;
 
 typedef struct {
-    uint32_t direccion;
-    uint32_t datos_length;
+    int32_t direccion;
+    int32_t datos_length;
     char* datos;
+    int32_t pid;
 } cpu_write;
 
 typedef struct {
-    uint32_t direccion;
-    uint32_t tamanio;
+    int32_t direccion;
+    int32_t tamanio;
+    int32_t pid;
 } cpu_read;
 
-typedef struct {
-    char* data;
-    uint32_t data_length;
-} t_memoria;
 
 typedef struct {
     t_instruccion instruccion;
-    uint32_t parametros_length;
+    int32_t parametros_length;
     char* parametros;
 } struct_memoria_to_cpu;
+
+typedef struct{
+    int32_t tam_paginas;
+    int32_t cantidad_niveles;
+    int32_t cant_entradas;
+} t_config_to_cpu;
 
 #endif // ESTRUCTURAS_H

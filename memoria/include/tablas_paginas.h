@@ -1,32 +1,41 @@
-#ifndef TABLAS_PAGINAS.H
-#define TABLAS_PAGINAS.H
+#ifndef TABLAS_PAGINAS_H
+#define TABLAS_PAGINAS_H
 
 #include<commons/collections/list.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdint.h>
+#include<math.h>
+
+#include "common.h"
 
 
-typedef struct{
-    uint32_t nivel;     //nivel(1...n)
-    t_list* entradas;   //lista de struct entrada_pagina
-    uint32_t pid;       //proceso al que le pertenece esa tabla de paginas.
-} tabla_paginas;
 
-typedef struct{
-    t_marco marco;             //solo valido si es entrada de nivel final.
-    uint32_t* tabla_siguiente;  //solo valido si es entrada de nivel intermedio.
-    bool es_final;              //indica si es tabla final, si TRUE, se usa marco; si FALSE, se usa tabla_siguiente.         
-} entrada_pagina;
 
-typedef struct{
-    uint32_t numero_de_marco;
+
+
+//Estructura de marco en memoria
+typedef struct t_marco{
+    int32_t numero_de_marco;
     bool estado;    //1 libre, 0 ocupado.
     bool modificado; //1 si el marco fue modificado, 0 si no.
 } t_marco;
 
-void inicializar_tabla_de_paginas();
-void crear_tabla_de_paginas();
+
+//Entrada de una tabla de paginas.
+typedef struct entrada_tabla{
+    int32_t marco;                   //solo valido si es entrada de nivel final.
+    tabla_paginas* tabla_siguiente;  //puntero a la siguiente tabla, solo valido si es entrada de nivel intermedio, sino es NULL.       
+} entrada_tabla;
+
+
+tabla_paginas* crear_tabla(int32_t nivel);
+tablas_por_pid* crear_tabla_raiz(int32_t pid, int32_t tamanio_proceso);
+int32_t devolver_marco(tabla_paginas* tabla_actual, int32_t* indices, int32_t nivel, t_metricas *metricas_proceso);
+void liberar_espacio_memoria(tablas_por_pid* proceso, int32_t tamanio_proceso, t_metricas* metricas_proceso);
+void liberar_tablas_paginas(tabla_paginas* tabla_actual, int32_t nivel, int32_t* tamanio_proceso);
+
+
 
 
 #endif

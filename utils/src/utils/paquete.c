@@ -13,17 +13,17 @@ void destruir_paquete(t_paquete *paquete) {
     free(paquete);
 }
 
-void enviar_paquete(t_paquete *paquete, uint32_t socket) {
-    uint32_t err;
-    void* a_enviar = malloc(paquete->buffer->size + sizeof(uint8_t) + sizeof(uint32_t));
+void enviar_paquete(t_paquete *paquete, int32_t socket) {
+    int32_t err;
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(uint8_t) + sizeof(int32_t));
     int offset = 0;
     memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t));
     offset += sizeof(uint8_t);
-    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
-    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(int32_t));
+    offset += sizeof(int32_t);
     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
 
-    err = send(socket, a_enviar, paquete->buffer->size + sizeof(uint8_t) + sizeof(uint32_t), 0);
+    err = send(socket, a_enviar, paquete->buffer->size + sizeof(uint8_t) + sizeof(int32_t), 0);
 
     if(err == -1) {
         log_error(logger, "Error al enviar el paquete: %s", strerror(errno));
@@ -34,14 +34,14 @@ void enviar_paquete(t_paquete *paquete, uint32_t socket) {
     destruir_paquete(paquete);
 }
 
-t_paquete *recibir_paquete(uint32_t socket) {
-    uint32_t err;
+t_paquete *recibir_paquete(int32_t socket) {
+    int32_t err;
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->buffer = malloc(sizeof(t_buffer));
     // Primero recibimos el codigo de operacion
     paquete->codigo_operacion = recibir_operacion(socket);
     // Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
-    err = recv(socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
+    err = recv(socket, &(paquete->buffer->size), sizeof(int32_t), 0);
     if(err == -1) {
         log_error(logger, "Error al recibir tamaño de buffer: %s", strerror(errno));
         paquete->codigo_operacion = -1;
@@ -61,14 +61,14 @@ t_paquete *recibir_paquete(uint32_t socket) {
     return paquete;
 }
 
-char* recibir_handshake(uint32_t fd_conexion) {
+char* recibir_handshake(int32_t fd_conexion) {
     t_paquete *handshake = recibir_paquete(fd_conexion);
     if (handshake->codigo_operacion != HANDSHAKE) {
         log_error(logger, "Codigo operación incorrecto para Handshake.");
         //abort();
     }
 
-    uint32_t length = buffer_read_uint32(handshake->buffer);
+    int32_t length = buffer_read_int32(handshake->buffer);
     char* identificador = buffer_read_string(handshake->buffer, &length);
 
     // if (numero_recibido != 1) {
@@ -81,14 +81,14 @@ char* recibir_handshake(uint32_t fd_conexion) {
     return identificador;
 }
 
-void enviar_handshake(uint32_t fd_conexion, char* p_identificador) {
+void enviar_handshake(int32_t fd_conexion, char* p_identificador) {
     t_handshake* handshake = malloc(sizeof(t_handshake));
     handshake->identificador = p_identificador;
     handshake->id_length = string_length(p_identificador) + 1;
 
-    t_buffer *inicio = buffer_create(sizeof(uint32_t) + handshake->id_length);
+    t_buffer *inicio = buffer_create(sizeof(int32_t) + handshake->id_length);
 
-    buffer_add_uint32(inicio, handshake->id_length);
+    buffer_add_int32(inicio, handshake->id_length);
 
     buffer_add_string(inicio, handshake->id_length, handshake->identificador);
 

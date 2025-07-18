@@ -1,4 +1,4 @@
-#include "liberacion.h"
+#include "../include/liberacion.h"
 
 void liberar_lista_instrucciones(t_list* lista) {
     if(lista == NULL) return;

@@ -23,29 +23,32 @@ typedef enum {
 
 typedef struct {
     t_estado estado;
-    uint32_t ME;
+    int32_t ME;
     t_temporal *MT;
 } t_estado_metricas;
 
 typedef struct {
-    uint32_t pid;
-    uint32_t pc;
+    int32_t pid;
+    int32_t pc;
     t_list* metricas;
     t_estado estado_actual;
+    int32_t tamanio_proceso;
+    int32_t rafaga_estimada;
+    char* cpu_id;
 } t_pcb;
 
 typedef struct {
     char* identificador;
     bool estado;
-    uint32_t socket_dispatch;
-    uint32_t socket_interrupt;
+    int32_t socket_dispatch;
+    int32_t socket_interrupt;
 } t_cpu;
 
 typedef struct {
     char* identificador;
     bool estado;
-    uint32_t socket;
-    uint32_t proceso_ejecucion;
+    int32_t socket;
+    int32_t proceso_ejecucion;
 } t_io;
 
 typedef struct {
@@ -58,6 +61,9 @@ void finalizar_modulo();
 void escucha_io();
 void handshake_memoria();
 void escucha_cpu();
+
+//largo plazo
+
 void largo_plazo();
 void planificar_fifo_largo_plazo();
 t_estado_metricas *crear_metrica_estado(t_estado);
@@ -68,21 +74,31 @@ bool consultar_a_memoria();
 void enviar_instrucciones();
 t_buffer *serializar_kernel_to_memoria(kernel_to_memoria*);
 void pasar_ready(t_pcb *, t_estado_metricas*);
-bool terminar_proceso_memoria (uint32_t);
-void terminar_proceso(uint32_t);
-t_pcb* pcb_by_pid(t_list*, uint32_t);
+bool terminar_proceso_memoria (int32_t);
+void terminar_proceso(int32_t);
+t_pcb* pcb_remove_by_pid(t_list*, int32_t);
+t_pcb* pcb_get_by_pid(t_list* pcb_list, int32_t pid);
 void loggear_metricas_estado(t_pcb*);
 char* t_estado_to_string(t_estado);
+void planificar_pmcp_largo_plazo();
+bool es_mas_chico_que(void *un_pcb, void *otro_pcb);
+void dessuspender_proceso(t_pcb* pcb);
+bool consultar_a_memoria_by_pcb(t_pcb *pcb);
+void pasar_susp_ready(t_pcb *pcb, t_estado_metricas* metricas);
+
+//corto plazo
+
 void administrar_cpus_dispatch();
-void agregar_cpu_dispatch(uint32_t*);
+void agregar_cpu_dispatch(int32_t*);
 void administrar_cpus_interrupt();
-void agregar_cpu_interrupt(uint32_t*);
+void agregar_cpu_interrupt(int32_t*);
 t_cpu *cpu_find_by_id (char *);
-void agregar_io (uint32_t *);
+void agregar_io (int32_t *);
 void administrar_dispositivos_io();
-void ejecutar_io_syscall (uint32_t , char* , uint32_t );
+void ejecutar_io_syscall (int32_t , char* , int32_t );
 void enviar_kernel_to_io (char*);
 void manejar_respuesta_io(t_io *);
+void desbloquear_proceso(int32_t pid);
 t_list *io_filter_by_id (char *);
 t_io_queue *io_queue_find_by_id (char *);
 bool io_liberada(void* );
@@ -91,33 +107,51 @@ void corto_plazo();
 void planificar_fifo_corto_plazo();
 bool find_cpu_libre(void*);
 void pasar_exec(t_pcb *);
-void enviar_kernel_to_cpu(uint32_t , t_pcb *); 
+void enviar_kernel_to_cpu(int32_t , t_pcb *); 
 t_buffer *serializar_kernel_to_cpu(kernel_to_cpu* );
 void atender_respuesta_cpu(t_cpu *);
 char *t_instruccion_to_string(t_instruccion ); 
 t_syscall *deserializar_t_syscall(t_buffer* );
-void ejecutar_init_proc(uint32_t , char* , uint32_t , t_cpu* ); 
+void ejecutar_init_proc(int32_t , char* , int32_t , t_cpu* ); 
+void planificar_sjf_corto_plazo();
+int32_t estimar_sjf (t_pcb* pcb);
+bool comparar_rafagas (void* un_pcb, void* otro_pcb);
+void planificar_srt_corto_plazo();
+void* mayor_rafaga (void* un_pcb, void* otro_pcb);
+void interrumpir_proceso(t_pcb* proceso, t_cpu* cpu);
+kernel_to_cpu *deserializar_kernel_to_cpu(t_buffer* buffer); 
+void ejecutar_dump_memory(int32_t);
+void pasar_blocked(t_pcb* proceso, char* id_io);
+void verificar_tiempo_suspension(t_pcb *proceso);
+void suspender_proceso(t_pcb *proceso);
+void pasar_susp_blocked(t_pcb *pcb);
 
 
 t_log *logger;
 t_config* config;
-uint32_t pid_counter;
-uint32_t fd_escucha_cpu;
-uint32_t fd_escucha_cpu_interrupt;
-uint32_t fd_escucha_io;
+int32_t pid_counter;
+int32_t fd_escucha_cpu;
+int32_t fd_escucha_cpu_interrupt;
+int32_t fd_escucha_io;
+float alfa; 
+int32_t est_inicial;
 t_list *cola_new;
 t_list *cola_ready;
 t_list *cola_exec;
 t_list *cola_blocked;
+t_list *cola_susp_blocked;
+t_list *cola_susp_ready;
 t_list *archivos_instruccion;
 t_list *io_list;
 t_list *io_queue_list;
 t_list *cpu_list;
 bool inicio_modulo;
 sem_t sem_largo_plazo;
-sem_t sem_cpus;
-sem_t sem_io;
-sem_t sem_execute;
+sem_t mutex_cpus;
+sem_t mutex_io;
+sem_t mutex_execute;
 sem_t sem_corto_plazo;
-sem_t sem_ready;
-sem_t sem_blocked;
+sem_t mutex_ready;
+sem_t mutex_blocked;
+sem_t mutex_susp_blocked;
+sem_t mutex_susp_ready;
